@@ -59,11 +59,9 @@ func handleConnection(conn net.Conn, cominterface interface{}) {
 }
 
 func main() {
-	s, err := simpc.NewServer(handleConnection, simpc.DefaultPath)
-	if err != nil {
-		log.Fatal("dialing:", err.Error())
-	}
-	err = s.Listen(0)
+	s := simpc.NewServer(handleConnection, simpc.DefaultPath)
+
+	err := s.Listen(0)
 	if err != nil {
 		log.Fatal("dialing:", err.Error())
 	}

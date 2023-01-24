@@ -21,13 +21,13 @@ const (
 	DefaultPath = "simpc_port.txt"
 )
 
-func NewServer(handler func(net.Conn, interface{}), tempfile string) (*server, error) {
+func NewServer(handler func(net.Conn, interface{}), tempfile string) *server {
 	s := &server{}
 	s.ln = nil
 	s.done = make(chan struct{})
 	s.handler = handler
 	s.tempfile = tempfile
-	return s, nil
+	return s
 }
 
 func (s server) PortStr() string {
@@ -58,6 +58,9 @@ func (s *server) accept() (net.Conn, error) {
 }
 
 func (s *server) Dispatch(cominterface interface{}) error {
+	if s.ln == nil {
+		return errors.New("server not started")
+	}
 	for {
 		select {
 		case <-s.done:
