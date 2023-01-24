@@ -1,5 +1,5 @@
 // simpc is a package that provides a simple IPC mechanism for Go programs, its usecase is quite specific, as such its capabilities are limited
-package main
+package simpc
 
 import (
 	"errors"
