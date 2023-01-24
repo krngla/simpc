@@ -113,9 +113,10 @@ func (c *client) Connect(port string) error {
 	if err != nil {
 		return errors.New("failed to connect:" + err.Error())
 	}
+	return nil
 }
 
-func (c *client) Link(conIF interface{}) error {
+func (c *client) Link(conIF interface{}) {
 	go c.handler(c.conn, conIF)
 }
 

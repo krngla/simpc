@@ -8,6 +8,8 @@ import (
 	"net"
 	"os"
 	"time"
+
+	"github.com/krngla/simpc"
 )
 
 func handleConnection(conn net.Conn) {

@@ -1,4 +1,4 @@
-module simpc
+module github.com/krngla/simpc
 
 go 1.19
 

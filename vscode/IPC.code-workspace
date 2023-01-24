@@ -3,5 +3,8 @@
 		{
 			"path": ".."
 		}
-	]
+	],
+	"gopls": {
+		"experimentalWorkspaceModule": true,
+	}
 }
