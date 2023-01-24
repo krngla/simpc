@@ -18,7 +18,7 @@ type server struct {
 }
 
 const (
-	defaultPath = "simpc_port.txt"
+	DefaultPath = "simpc_port.txt"
 )
 
 func NewServer(handler func(net.Conn, interface{}), tempfile string) (*server, error) {

@@ -12,7 +12,7 @@ import (
 	"github.com/krngla/simpc"
 )
 
-func handleConnection(conn net.Conn) {
+func handleConnection(conn net.Conn, cominterface interface{}) {
 
 	defer conn.Close()
 	//writer.WriteString("END\n")
@@ -59,8 +59,17 @@ func handleConnection(conn net.Conn) {
 }
 
 func main() {
-	s := simpc.NewServer(handleConnection, simpc.defaultPath)
-	s.HandleConnection = handleConnection
-	s.ListenAndServe()
-
+	s, err := simpc.NewServer(handleConnection, simpc.DefaultPath)
+	if err != nil {
+		log.Fatal("dialing:", err.Error())
+	}
+	err = s.Listen(0)
+	if err != nil {
+		log.Fatal("dialing:", err.Error())
+	}
+	defer s.Close()
+	fmt.Printf("Listening on port %d\n", s.Port())
+	s.Dispatch(nil)
+	for {
+	}
 }
