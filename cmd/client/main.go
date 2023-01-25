@@ -3,11 +3,10 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"net"
-	"strings"
+	"time"
 )
 
+/*
 func handleConnection(conn net.Conn, str string) {
 	line, err := reader.ReadString('\n')
 	line = strings.TrimSuffix(line, "\n")
@@ -20,4 +19,29 @@ func handleConnection(conn net.Conn, str string) {
 		break
 	}
 	fmt.Printf("%s\n", line)
+}
+*/
+
+func main() {
+
+	done := make(chan struct{})
+	ret := make(chan bool)
+	fn := func(done chan struct{}, ret chan bool) {
+		for {
+			select {
+			case <-done:
+				ret <- true
+				return
+			default:
+				fmt.Printf("default\n")
+			}
+		}
+	}
+	go fn(done, ret)
+
+	time.Sleep(1 * time.Second)
+	done <- struct{}{}
+	<-ret
+	fmt.Printf("\"done\": %v\n", "done")
+
 }
