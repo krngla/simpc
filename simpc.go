@@ -78,6 +78,7 @@ func (s *server) Dispatch() error {
 		return errors.New("server not started")
 	}
 	s.Listening = true
+
 	for {
 		select {
 		case <-s.done:
@@ -151,7 +152,7 @@ func (c *client) Link() {
 }
 
 func (c *client) Close() {
-	if c.conn != nil {
+	if c.conn == nil {
 		return
 	}
 	c.conn.Close()

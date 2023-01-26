@@ -4,17 +4,25 @@ import (
 	"net"
 	"os/exec"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 )
 
 type mockServerHandler struct {
 	ran  bool
-	nran int
+	nran int64
+	t    *testing.T
+	wg   *sync.WaitGroup
 }
 
 func (m *mockServerHandler) Handle(conn net.Conn) {
 	m.ran = true
-	m.nran++
+	atomic.AddInt64(&m.nran, 1)
+	m.t.Logf("mockServerHandler.Handle() ran %d times", m.nran)
+	if m.wg != nil {
+		m.wg.Done()
+	}
 }
 
 func TestNewServer(t *testing.T) {
@@ -76,15 +84,18 @@ type mockIO struct {
 
 func (m *mockIO) Handle(conn net.Conn) {
 	m.ran = true
+	if conn == nil {
+		return
+	}
 	conn.Close()
 }
 
 func TestServerHandler(t *testing.T) {
 
-	m := &mockIO{false}
-	s := NewServer(m, DefaultPath, nil)
+	ms := &mockServerHandler{false, 0, t, nil}
+	s := NewServer(ms, DefaultPath, nil)
 	s.handler.Handle(nil)
-	if !m.ran {
+	if !ms.ran {
 		t.Error("Failed to set handler")
 	}
 }
@@ -109,7 +120,7 @@ func launchdispatch(s *server, errs chan error) {
 
 func TestServerDispatch(t *testing.T) {
 	done := make(chan struct{})
-	ms := &mockServerHandler{false, 0}
+	ms := &mockServerHandler{false, 0, t, nil}
 	s := NewServer(ms, DefaultPath, done)
 	err := s.Listen(0)
 	if err != nil {
@@ -143,28 +154,32 @@ func TestServerDispatch(t *testing.T) {
 }
 
 func TestServerMassDispatch(t *testing.T) {
+	var wg sync.WaitGroup
+	//n := 100
 	n := 10_000
 	done := make(chan struct{})
-	ms := &mockServerHandler{false, 0}
+	ms := &mockServerHandler{false, 0, t, &wg}
 	s := NewServer(ms, DefaultPath, done)
 	s.Listen(0)
 	errs := make(chan error)
 	go launchdispatch(s, errs)
 
-	clientfactory := func() {
+	clientfactory := func(wg *sync.WaitGroup) {
+		wg.Add(2)
 		c := NewClient(nil, DefaultPath)
 		_ = c.Connect(s.PortStr())
 		c.Close()
+		wg.Done()
 	}
-
 	for i := 0; i < n-1; i++ {
-		go clientfactory()
+		go clientfactory(&wg)
+
 	}
+	wg.Wait()
 	go func() {
 		done <- struct{}{}
 	}()
-	clientfactory()
-
+	go clientfactory(&wg)
 	err := <-errs
 	if err != nil {
 		t.Error("Dispatch failed: " + err.Error())
@@ -172,7 +187,9 @@ func TestServerMassDispatch(t *testing.T) {
 	if !ms.ran {
 		t.Error("Dispatch failed to run handler")
 	}
-	if ms.nran != n {
+	t.Logf("ms.nran: %v\n", ms.nran)
+	if ms.nran != int64(n) {
 		t.Errorf("Dispatch failed to run handler %d times", n)
 	}
+
 }
