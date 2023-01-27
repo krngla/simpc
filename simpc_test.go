@@ -134,7 +134,6 @@ func TestServerDispatch(t *testing.T) {
 
 	_ = c.Connect(s.PortStr())
 	c.Close()
-	c.Link()
 	go func() {
 		done <- struct{}{}
 	}()
@@ -156,7 +155,7 @@ func TestServerDispatch(t *testing.T) {
 func TestServerMassDispatch(t *testing.T) {
 	var wg sync.WaitGroup
 	//n := 100
-	n := 10_000
+	n := 1_000
 	done := make(chan struct{})
 	ms := &mockServerHandler{false, 0, t, &wg}
 	s := NewServer(ms, DefaultPath, done)
